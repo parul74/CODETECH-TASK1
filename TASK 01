@@ -1,0 +1,147 @@
+import datetime
+
+class LibraryItem:
+    def _init_(self, item_id, title, author, category):
+        self.item_id = item_id
+        self.title = title
+        self.author = author
+        self.category = category
+        self.is_checked_out = False
+        self.due_date = None
+        self.borrower = None
+
+class Book(LibraryItem):
+    def _init_(self, item_id, title, author, category):
+        super()._init_(item_id, title, author, category)
+
+class Magazine(LibraryItem):
+    def _init_(self, item_id, title, author, category):
+        super()._init_(item_id, title, author, category)
+
+class DVD(LibraryItem):
+    def _init_(self, item_id, title, author, category):
+        super()._init_(item_id, title, author, category)
+
+class Library:
+    def _init_(self):
+        self.items = []
+        self.fines = {}
+
+    def add_item(self, item):
+        self.items.append(item)
+        print(f'Item {item.title} added to the library.')
+
+    def checkout_item(self, item_id, borrower):
+        item = self.find_item_by_id(item_id)
+        if item and not item.is_checked_out:
+            item.is_checked_out = True
+            item.due_date = datetime.datetime.now() + datetime.timedelta(days=14)  # 2 weeks loan period
+            item.borrower = borrower
+            print(f'Item {item.title} checked out by {borrower}. Due date is {item.due_date}.')
+        else:
+            print('Item is not available for checkout.')
+
+    def return_item(self, item_id):
+        item = self.find_item_by_id(item_id)
+        if item and item.is_checked_out:
+            if datetime.datetime.now() > item.due_date:
+                overdue_days = (datetime.datetime.now() - item.due_date).days
+                fine = overdue_days * 1  # $1 fine per overdue day
+                if item.borrower in self.fines:
+                    self.fines[item.borrower] += fine
+                else:
+                    self.fines[item.borrower] = fine
+                print(f'Item is overdue. Fine for {item.borrower}: ${fine}')
+            item.is_checked_out = False
+            item.due_date = None
+            item.borrower = None
+            print(f'Item {item.title} returned.')
+        else:
+            print('Item was not checked out.')
+
+    def find_item_by_id(self, item_id):
+        for item in self.items:
+            if item.item_id == item_id:
+                return item
+        return None
+
+    def search_items(self, query, category=None):
+        results = []
+        for item in self.items:
+            if query.lower() in item.title.lower() or query.lower() in item.author.lower():
+                if category:
+                    if item.category.lower() == category.lower():
+                        results.append(item)
+                else:
+                    results.append(item)
+        return results
+
+    def get_fines(self, borrower):
+        return self.fines.get(borrower, 0)
+
+# Main Program
+def main():
+    library = Library()
+
+    while True:
+        print("\nLibrary Management System")
+        print("1. Add item")
+        print("2. Checkout item")
+        print("3. Return item")
+        print("4. Search items")
+        print("5. View fines")
+        print("6. Exit")
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            item_type = input("Enter item type (book/magazine/dvd): ").lower()
+            item_id = input("Enter item ID: ")
+            title = input("Enter title: ")
+            author = input("Enter author: ")
+            category = input("Enter category: ")
+            
+            if item_type == 'book':
+                item = Book(item_id, title, author, category)
+            elif item_type == 'magazine':
+                item = Magazine(item_id, title, author, category)
+            elif item_type == 'dvd':
+                item = DVD(item_id, title, author, category)
+            else:
+                print("Invalid item type.")
+                continue
+            
+            library.add_item(item)
+
+        elif choice == '2':
+            item_id = input("Enter item ID to checkout: ")
+            borrower = input("Enter borrower's name: ")
+            library.checkout_item(item_id, borrower)
+
+        elif choice == '3':
+            item_id = input("Enter item ID to return: ")
+            library.return_item(item_id)
+
+        elif choice == '4':
+            query = input("Enter search query (title/author): ")
+            category = input("Enter category (optional): ")
+            results = library.search_items(query, category)
+            if results:
+                for item in results:
+                    print(f'ID: {item.item_id}, Title: {item.title}, Author: {item.author}, Category: {item.category}, Checked Out: {item.is_checked_out}')
+            else:
+                print("No items found.")
+
+        elif choice == '5':
+            borrower = input("Enter borrower's name to view fines: ")
+            fines = library.get_fines(borrower)
+            print(f'Fines for {borrower}: ${fines}')
+
+        elif choice == '6':
+            print("Exiting the Library Management System.")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "_main_":
+    main()
